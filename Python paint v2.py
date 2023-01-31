@@ -5,36 +5,44 @@ import keyboard
 import os
 import time
 
+def multiChar(length, char = ' ', first = None, last = None):
+    workString = ''
+    for x in range(0, length):
+        if x == 0 and first != None: workString += first
+        elif x == length - 1 and last != None: workString += last
+        else: workString += char
+    return workString
+
 def down():  # Down command
-    cursorPosition[1] += 1
-    if cursorPosition[1] >= rowsPerPicture:
-        cursorPosition[1] = rowsPerPicture - 1
-    printPicture(rows, cursorPosition)
+    cursorPos[1] += 1
+    if cursorPos[1] >= rowsPerPicture:
+        cursorPos[1] = rowsPerPicture - 1
+    pictureUpdatedFlag = True
 def up():  # Up command
-    cursorPosition[1] -= 1
-    if cursorPosition[1] < 0:
-        cursorPosition[1] = 0
-    printPicture(rows, cursorPosition)
+    cursorPos[1] -= 1
+    if cursorPos[1] < 0:
+        cursorPos[1] = 0
+    pictureUpdatedFlag = True
 def right():  # Right command
-    cursorPosition[0] += 1
-    if cursorPosition[0] >= itemsPerRow:
-        cursorPosition[0] = itemsPerRow - 1
-    printPicture(rows, cursorPosition)
+    cursorPos[0] += 1
+    if cursorPos[0] >= itemsPerRow:
+        cursorPos[0] = itemsPerRow - 1
+    pictureUpdatedFlag = True
 def left():  # Left command
-    cursorPosition[0] -= 1
-    if cursorPosition[0] < 0:
-        cursorPosition[0] = 0
-    printPicture(rows, cursorPosition)
+    cursorPos[0] -= 1
+    if cursorPos[0] < 0:
+        cursorPos[0] = 0
+    pictureUpdatedFlag = True
 def assignBrush(i):  # Changes brush to brush choice
     global brushChoice, boxes
     try:
         brushChoice = boxes[i]
     except IndexError:
         return()
-    printPicture(rows, cursorPosition)
+    pictureUpdatedFlag = True
 def paint():  # Paint current box command
-    rows[cursorPosition[1]][cursorPosition[0]] = brushChoice
-    printPicture(rows, cursorPosition)
+    picture[cursorPos[1]][cursorPos[0]] = brushChoice
+    pictureUpdatedFlag = True
 
 cursorChoice = 0  # Choice of cursor, global
 def toggleCursor():  # Increment cursor choice on keypress
@@ -43,10 +51,10 @@ def toggleCursor():  # Increment cursor choice on keypress
         cursorChoice += 1
     else:
         cursorChoice = 0
-    printPicture(rows, cursorPosition)
+    pictureUpdatedFlag = True
 def refreshCursor():  # Refresh cursor math
     global cursorChoice, cursorType
-    charUnderCursor = rows[cursorPosition[1]][cursorPosition[0]]
+    charUnderCursor = picture[cursorPos[1]][cursorPos[0]]
     indexInBoxes = boxes.index(charUnderCursor)
     cursorType = [
         '\u254b',  # Fixed cursor
@@ -56,53 +64,82 @@ def refreshCursor():  # Refresh cursor math
         None  # No cursor
     ]
 
-def printPicture(picture, cursor=(-1,-1)):
+imageBuffer = []
+def buildImageBuffer(picture):
+    global imageBuffer, cursorPos, cursorChoice, cursorType, brushChoice
     refreshCursor()
-    cursorChar = cursorType[cursorChoice]
+
+    imageBuffer = deepcopy(picture)  # Start with image buffer as a copy of the picture
+
+    imageBufferHeight = len(imageBuffer)  # Find height of image for later use
+    imageBufferHeightStrL = len(str(imageBufferHeight))  # Length of height string
+    imageBufferWidth = len(imageBuffer[0])  # Find width of image for later use
+    imageBufferWidthStrL = len(str(imageBufferWidth))  # Length of width string
+
+    if cursorChoice != None:  # If cursor choice is not None, set that place to the cursor char
+        imageBuffer[cursorPos[1]][cursorPos[0]] = cursorType[cursorChoice]
+
+    # Draw left and right borders
+    for rowIndex, row in enumerate(imageBuffer):
+        leftBorderLabel = str(rowIndex).rjust(imageBufferHeightStrL)
+        row.insert(0, leftBorderLabel + '\u2551')  # Insert left border with label
+        row.append('\u2551' + ('\u25c1' if rowIndex == cursorPos[1] else ' '))  # Right border plus arrow
+    pictureLocation = [len(leftBorderLabel) + 1, 0]  # Top left corner of the picture
+
+    # Draw top border
+    topBorder = multiChar(pictureLocation[0] - 1)  # Add spaces for left border
+    topBorder += multiChar(imageBufferWidth + 2, '\u2550', '\u2554', '\u2557')  # Middle, left, right chars
+    imageBuffer.insert(0, [*topBorder])
+    pictureLocation[1] += 1  # Picture is one row down now
+
+    # Draw top arrow
+    topArrowLine = multiChar(pictureLocation[0] - 1)  # Spaces for left border
+    topArrowLine = multiChar(pictureLocation[0] + cursorPos[0])
+    topArrowLine += '\u25bd'  # Place arrow
+    topArrowLine.ljust(pictureLocation[0] + imageBufferWidth)
+    imageBuffer.insert(0, [*topArrowLine])
+    pictureLocation[1] += 1  # Picture is one row down now
+
+    # Draw top text
+    topText = f'\n[ BRUSH: ] [{brushChoice}]\t' \
+              f'[ CURSOR: ] [{cursorType[cursorChoice]}] ( {cursorPos[0]}, {cursorPos[1]} )'
+    imageBuffer.insert(0, [*topText])
+    pictureLocation[1] += 1  # Picture is one row down now
 
 
-    rowIndexStrLen = len(f'{len(picture)}')
-    columnStrLength = len(f'{len(picture[-1])}')
-    os.system('cls' if os.name == 'nt' else 'clear')  # Uses correct clear console command
-    print(f'\n[ BRUSH: ] [{brushChoice}]\t[ CURSOR: ] [{cursorChar}] ( {cursorPosition[0]}, {cursorPosition[1]} )')
-    print(''.ljust(rowIndexStrLen + 1), end='')
-    for i in range(rowIndexStrLen + 1, len(picture[0]) + 1 + rowIndexStrLen):  # Print top cursor pointer
-        print('\u25bd\u25bd' if i - (rowIndexStrLen + 1) == cursor[0] else '  ', end='')
-    print()
-    # Top border:
-    for i in range(0, len(picture[0]) + 2):
-        if i == 0: print(f"""{''.rjust(rowIndexStrLen)}\u2554""", end='')  # Left corner
-        elif i == len(picture[0]) + 1: print('\u2557')  # Right corner
-        else: print('\u2550\u2550', end='')  # Middle section
+    # Draw bottom border
+    bottomBorder = multiChar(pictureLocation[0] - 1)
+    bottomBorder += multiChar(imageBufferWidth + 2, '\u2550', first='\u255a', last='\u255d')  # Mid, L, R chars
+    imageBuffer.append([*bottomBorder])
 
-    for rowIndex, row in enumerate(picture):  # Print picture itself
-        rowIndexStr = f'{rowIndex}'.rjust(rowIndexStrLen)
-        for itemIndex, item in enumerate(row):
-            if itemIndex == 0: print(f'{rowIndexStr}\u2551', end='')  # Left border
+    # Draw bottom numbers
+    bottomLabelsLs = []
+    for x in range(0, imageBufferWidth):
+        xLabel = str(x) if x % intervalXLabel == 0 else ''  # Only label if on interval
+        bottomLabelsLs.append(xLabel.ljust(imageBufferWidthStrL))  # Append with max string length justification
+    for x in range(0, imageBufferWidthStrL):  # For each character of the labels
+        imageBuffer.append([*multiChar(imageBufferWidthStrL + 1)])  # Add empty list at bottom
+        for item in bottomLabelsLs:  # Add character for this row
+            imageBuffer[-1].append(item[x])
+    imageBuffer.append([])
 
-            if itemIndex == cursor[0] and rowIndex == cursor[1] and cursorChar != None:  # If this item is cursor location
-                print(cursorChar + cursorChar, end='')
-            else:
-                print(item + item, end='')
-
-            if itemIndex == len(row) - 1: print('\u2551', '\u25c1' if rowIndex == cursor[1] else '', sep='', end='')  # Right border
-        print()
-    # Bottom border:
-    for i in range(0, len(picture[-1]) + 2):
-        if i == 0:  print(f"""{''.rjust(rowIndexStrLen)}\u255a""", end='')  # Left corner
-        elif i == len(picture[-1]) + 1: print('\u255d')  # Right corner
-        else:   print('\u2550\u2550', end='')  # Middle section
-    # Bottom index number
-    for i in range(0, columnStrLength):  # For each digit of the number of columns
-        print(f"""{''.rjust(rowIndexStrLen + 1)}""", end='')
-        for columnNum in range(0, 2*len(picture[-1])):  # For each column
-            print(str(columnNum//2).ljust(columnStrLength)[i] if columnNum % (intervalXLabel * 2) == 0 else ' ', end='')  # print index
-        print()
-    print()
-    # Print box options, then controls
+    # Draw controls/etc
+    bottomText = ''
     for index, item in enumerate(boxes):
-        print(f'[{index + 1}] {item}\t', end='')
-    print('\n[SPACE: PAINT] [WASD:MOVE] [H:TOGGLE CURSOR]\t\t', end='')
+        bottomText += f'[{index + 1}] {item}\t'  # Box options
+    bottomText += '\n[SPACE: PAINT] [WASD:MOVE] [H:TOGGLE CURSOR]' # Controls
+    imageBuffer.append([*bottomText])
+
+    return imageBuffer
+
+def printPicture(picture):
+    global imageBuffer
+    buildImageBuffer(picture)
+    os.system('cls' if os.name == 'nt' else 'clear')  # Uses correct clear console command
+
+    for row in imageBuffer:
+        print(''.join(row))  # Join elements of row and print
+
 
 
 intervalXLabel = 2  # Customization
@@ -110,6 +147,7 @@ intervalXLabel = 2  # Customization
 
 #  BEGIN PROGRAM
 print('\n == Python Paint v1 ==')
+pictureUpdatedFlag = True
 boxes = [
     '\u2588',  # full
     '\u2593',  # dark
@@ -125,7 +163,7 @@ shadeSqrBoxes = {
     boxes[4]: '\u25a1'   # none
 }  # Shaded square characters for cursor
 
-bufferRow, rows = [], []  # Matrix: A list of lists of row positions
+bufferRow, picture = [], []  # Matrix: A list of lists of row positions
 # region Picture size prompt
 print('Input picture size:')
 while True:  # Prompt user picture width
@@ -138,16 +176,13 @@ while True:
 
 # region Fill picture with empty characters
 for x in range(0, rowsPerPicture):  # For each row in the picture
-    for y in range(0, itemsPerRow):  # For each item in row
-        bufferRow.append(' ')
-    rows.append(deepcopy(bufferRow))
-    bufferRow.clear()
-# rows now contains (rowsPerPicture) lists, each containing (itemsPerRow) items that will act as pixels
+    picture.append([*multiChar(itemsPerRow)])  # Append a list of spaces
+
+# picture now contains (rowsPerPicture) lists, each containing (itemsPerRow) items that will act as pixels
 # endregion
 
-cursorPosition, brushChoice = [itemsPerRow//2, rowsPerPicture//2], boxes[4]  # Defaults
-commands = "U, D, L, R, C (CHOOSE), P (PAINT)"
-printPicture(rows, cursorPosition)
+cursorPos, brushChoice = [itemsPerRow//2, rowsPerPicture//2], boxes[0]  # Defaults
+printPicture(picture)
 
 # region Hotkey initialization
 hotkeys = (  # Hotkeys for control buttons
@@ -167,4 +202,6 @@ for x in range(0, 9):  # Creates the number hotkeys
 
 while True:  # Enter infinite loop, painting begins
     time.sleep(0.001)
+    if pictureUpdatedFlag == True:
+        printPicture(picture)
     continue
