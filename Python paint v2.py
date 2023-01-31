@@ -14,39 +14,44 @@ def multiChar(length, char = ' ', first = None, last = None):
     return workString
 
 def down():  # Down command
+    global pictureUpdatedFlag
     cursorPos[1] += 1
     if cursorPos[1] >= rowsPerPicture:
         cursorPos[1] = rowsPerPicture - 1
     pictureUpdatedFlag = True
 def up():  # Up command
+    global pictureUpdatedFlag
     cursorPos[1] -= 1
     if cursorPos[1] < 0:
         cursorPos[1] = 0
     pictureUpdatedFlag = True
 def right():  # Right command
+    global pictureUpdatedFlag
     cursorPos[0] += 1
     if cursorPos[0] >= itemsPerRow:
         cursorPos[0] = itemsPerRow - 1
     pictureUpdatedFlag = True
 def left():  # Left command
+    global pictureUpdatedFlag
     cursorPos[0] -= 1
     if cursorPos[0] < 0:
         cursorPos[0] = 0
     pictureUpdatedFlag = True
 def assignBrush(i):  # Changes brush to brush choice
-    global brushChoice, boxes
+    global pictureUpdatedFlag, brushChoice, boxes
     try:
         brushChoice = boxes[i]
     except IndexError:
         return()
     pictureUpdatedFlag = True
 def paint():  # Paint current box command
+    global pictureUpdatedFlag
     picture[cursorPos[1]][cursorPos[0]] = brushChoice
     pictureUpdatedFlag = True
 
 cursorChoice = 0  # Choice of cursor, global
 def toggleCursor():  # Increment cursor choice on keypress
-    global cursorChoice
+    global pictureUpdatedFlag, cursorChoice
     if cursorChoice < (len(cursorType) - 1):
         cursorChoice += 1
     else:
@@ -133,12 +138,13 @@ def buildImageBuffer(picture):
     return imageBuffer
 
 def printPicture(picture):
-    global imageBuffer
+    global pictureUpdatedFlag, imageBuffer
     buildImageBuffer(picture)
     os.system('cls' if os.name == 'nt' else 'clear')  # Uses correct clear console command
 
     for row in imageBuffer:
         print(''.join(row))  # Join elements of row and print
+    pictureUpdatedFlag = False
 
 
 
@@ -204,5 +210,4 @@ while True:  # Enter infinite loop, painting begins
     time.sleep(0.001)
     if pictureUpdatedFlag == True:
         printPicture(picture)
-        pictureUpdatedFlag == False
     continue
