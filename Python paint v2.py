@@ -81,7 +81,7 @@ def buildImageBuffer(picture):
     imageBufferWidth = len(imageBuffer[0])  # Find width of image for later use
     imageBufferWidthStrL = len(str(imageBufferWidth))  # Length of width string
 
-    if cursorChoice != None:  # If cursor choice is not None, set that place to the cursor char
+    if cursorType[cursorChoice] != None:  # If cursor choice is not None, set that place to the cursor char
         imageBuffer[cursorPos[1]][cursorPos[0]] = cursorType[cursorChoice]
 
     # Draw left and right borders
