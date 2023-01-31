@@ -142,7 +142,7 @@ def printPicture(picture):
 
 
 
-intervalXLabel = 2  # Customization
+intervalXLabel = 5  # Customization
 
 
 #  BEGIN PROGRAM
@@ -204,4 +204,5 @@ while True:  # Enter infinite loop, painting begins
     time.sleep(0.001)
     if pictureUpdatedFlag == True:
         printPicture(picture)
+        pictureUpdatedFlag == False
     continue
