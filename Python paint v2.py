@@ -64,43 +64,48 @@ def printPicture(picture, cursor=(-1,-1)):
     rowIndexStrLen = len(f'{len(picture)}')
     columnStrLength = len(f'{len(picture[-1])}')
     os.system('cls' if os.name == 'nt' else 'clear')  # Uses correct clear console command
-    os.system('cls')
     print(f'\n[ BRUSH: ] [{brushChoice}]\t[ CURSOR: ] [{cursorChar}] ( {cursorPosition[0]}, {cursorPosition[1]} )')
-    for i in range(0, len(picture[0]) + 3): print('\u25bd' if i - rowIndexStrLen - 1 == cursor[0] else ' ', end='')
+    print(''.ljust(rowIndexStrLen + 1), end='')
+    for i in range(rowIndexStrLen + 1, len(picture[0]) + 1 + rowIndexStrLen):  # Print top cursor pointer
+        print('\u25bd\u25bd' if i - (rowIndexStrLen + 1) == cursor[0] else '  ', end='')
     print()
-    for i in range(0, len(picture[0]) + 2):  # Top border
+    # Top border:
+    for i in range(0, len(picture[0]) + 2):
         if i == 0: print(f"""{''.rjust(rowIndexStrLen)}\u2554""", end='')  # Left corner
         elif i == len(picture[0]) + 1: print('\u2557')  # Right corner
-        else: print('\u2550', end='')
+        else: print('\u2550\u2550', end='')  # Middle section
 
-    for rowIndex, row in enumerate(picture):
+    for rowIndex, row in enumerate(picture):  # Print picture itself
         rowIndexStr = f'{rowIndex}'.rjust(rowIndexStrLen)
         for itemIndex, item in enumerate(row):
             if itemIndex == 0: print(f'{rowIndexStr}\u2551', end='')  # Left border
 
             if itemIndex == cursor[0] and rowIndex == cursor[1] and cursorChar != None:  # If this item is cursor location
-                print(cursorChar, end='')
+                print(cursorChar + cursorChar, end='')
             else:
-                print(item, end='')
+                print(item + item, end='')
 
             if itemIndex == len(row) - 1: print('\u2551', '\u25c1' if rowIndex == cursor[1] else '', sep='', end='')  # Right border
         print()
-    for i in range(0, len(picture[-1]) + 2):  # Bottom border
+    # Bottom border:
+    for i in range(0, len(picture[-1]) + 2):
         if i == 0:  print(f"""{''.rjust(rowIndexStrLen)}\u255a""", end='')  # Left corner
         elif i == len(picture[-1]) + 1: print('\u255d')  # Right corner
-        else:   print('\u2550', end='')
+        else:   print('\u2550\u2550', end='')  # Middle section
+    # Bottom index number
     for i in range(0, columnStrLength):  # For each digit of the number of columns
         print(f"""{''.rjust(rowIndexStrLen + 1)}""", end='')
-        for columnNum in range(0, len(picture[-1])):  # For each column
-            print(str(columnNum).ljust(columnStrLength)[i] if columnNum % intervalXLabel == 0 else ' ', end='')  # print index
+        for columnNum in range(0, 2*len(picture[-1])):  # For each column
+            print(str(columnNum//2).ljust(columnStrLength)[i] if columnNum % (intervalXLabel * 2) == 0 else ' ', end='')  # print index
         print()
     print()
-    for index, item in enumerate(boxes):  # Print box options
+    # Print box options, then controls
+    for index, item in enumerate(boxes):
         print(f'[{index + 1}] {item}\t', end='')
     print('\n[SPACE: PAINT] [WASD:MOVE] [H:TOGGLE CURSOR]\t\t', end='')
 
 
-intervalXLabel = 5  # Customization
+intervalXLabel = 2  # Customization
 
 
 #  BEGIN PROGRAM
